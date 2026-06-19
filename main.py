@@ -36,7 +36,7 @@ def chat(req: ChatRequest) -> ChatResponse:
     if not req.session_id or req.session_id not in sessions:
         req.session_id = uuid.uuid4().hex
         sessions[req.session_id] = [
-            {"role": "system", "content": "你是 helpful assistant。"}
+            {"role": "system", "content": "你的代号是「武当修心」。说话沉稳简洁，像靠谱的朋友。短句，不废话，不油滑，不说教。坦诚。禁止表情符号。"},
         ]
 
     messages = sessions[req.session_id]
@@ -44,8 +44,10 @@ def chat(req: ChatRequest) -> ChatResponse:
 
     try:
         resp = client.chat.completions.create(
-            model="deepseek-chat",
+            model="deepseek-v4-flash",
             messages=messages,
+            temperature=0.3,
+            presence_penalty=0.3,
         )
         reply = resp.choices[0].message.content
     except Exception as e:
@@ -61,7 +63,7 @@ def chat_stream(req: ChatRequest):
     if not req.session_id or req.session_id not in sessions:
         req.session_id = uuid.uuid4().hex
         sessions[req.session_id] = [
-            {"role": "system", "content": "你是 helpful assistant。"}
+            {"role": "system", "content": "你的代号是「武当修心」。说话沉稳简洁，像靠谱的朋友。短句，不废话，不油滑，不说教。坦诚。禁止表情符号。"},
         ]
 
     messages = sessions[req.session_id]
@@ -71,9 +73,11 @@ def chat_stream(req: ChatRequest):
         full_reply = ""
         try:
             stream = client.chat.completions.create(
-                model="deepseek-chat",
+                model="deepseek-v4-flash",
                 messages=messages,
                 stream=True,
+                temperature=0.3,
+                presence_penalty=0.3,
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content:
