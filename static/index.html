@@ -5,51 +5,490 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>武当修心</title>
 <style>
+/* ========== 基础 ========== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: system-ui, sans-serif; background: #111; color: #eee; height: 100vh; display: flex; flex-direction: column; }
-#header { padding: 12px 20px; background: #1a1a1a; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
-#header h1 { font-size: 18px; }
-#header button { background: #333; color: #eee; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; }
-#header button:hover { background: #444; }
-#messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-.msg { max-width: 80%; padding: 12px 16px; border-radius: 12px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
-.msg .label { font-size: 11px; opacity: 0.5; margin-bottom: 4px; }
-.msg.user { align-self: flex-end; background: #2563eb; }
-.msg.assistant { align-self: flex-start; background: #333; }
-.msg.assistant.streaming::after { content: "▊"; animation: blink 0.8s infinite; }
+
+body {
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  background: #08090f;
+  color: #c8d6e5;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  background-image:
+    radial-gradient(circle at 1px 1px, #1a1f35 1px, transparent 0);
+  background-size: 40px 40px;
+}
+
+/* ======================================== */
+/*  首页展示                                  */
+/* ======================================== */
+
+#landing {
+  position: fixed; inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+#landing.exit {
+  opacity: 0;
+  transform: scale(1.04);
+  pointer-events: none;
+  transition: opacity 0.6s ease, transform 0.8s ease;
+}
+
+/* 光环容器，退出时扩散 */
+.rings-layer {
+  position: absolute; inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease, transform 0.8s ease;
+}
+#landing.exit .rings-layer {
+  opacity: 0;
+  transform: scale(1.3);
+}
+
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(0,229,255,0.06);
+  animation: spin 20s linear infinite;
+  pointer-events: none;
+}
+.ring:nth-child(1) {
+  width: 360px; height: 360px;
+  border-color: rgba(0,229,255,0.1);
+  animation-duration: 18s;
+}
+.ring:nth-child(2) {
+  width: 440px; height: 440px;
+  border-color: rgba(108,92,231,0.07);
+  animation-duration: 24s;
+  animation-direction: reverse;
+}
+.ring:nth-child(3) {
+  width: 280px; height: 280px;
+  border-color: rgba(0,229,255,0.06);
+  animation-duration: 14s;
+}
+
+.ring::before {
+  content: '';
+  position: absolute;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #00e5ff;
+  top: -2px; left: 50%;
+  box-shadow: 0 0 8px #00e5ff, 0 0 20px #00e5ff;
+}
+.ring:nth-child(2)::before {
+  background: #a29bfe;
+  box-shadow: 0 0 8px #a29bfe, 0 0 20px #6c5ce7;
+}
+
+@keyframes spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* 中心文字 */
+.landing-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  transition: opacity 0.5s ease, transform 0.8s ease;
+}
+#landing.exit .landing-content {
+  opacity: 0;
+  transform: translateY(-24px);
+}
+
+.landing-content h1 {
+  font-size: 56px;
+  font-weight: 200;
+  letter-spacing: 14px;
+  margin-bottom: 24px;
+  /* 淡入动画 */
+  animation: titleIn 1.2s ease-out both;
+  /* 精致渐变 */
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.9) 0%,
+    rgba(180,200,220,0.7) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+@keyframes titleIn {
+  from {
+    opacity: 0;
+    letter-spacing: 28px;
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    letter-spacing: 14px;
+    filter: blur(0);
+  }
+}
+
+/* 粒子 */
+.particles {
+  position: absolute; inset: 0;
+  pointer-events: none; overflow: hidden;
+  transition: opacity 0.5s ease;
+}
+#landing.exit .particles { opacity: 0; }
+
+.dot {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: #00e5ff;
+  border-radius: 50%;
+  opacity: 0;
+  animation: float 6s ease-in-out infinite;
+}
+.dot:nth-child(1) { left: 20%; top: 30%; animation-delay: 0s; }
+.dot:nth-child(2) { left: 75%; top: 25%; animation-delay: 1s; background: #6c5ce7; }
+.dot:nth-child(3) { left: 60%; top: 70%; animation-delay: 2s; }
+.dot:nth-child(4) { left: 30%; top: 65%; animation-delay: 3s; background: #a29bfe; }
+.dot:nth-child(5) { left: 50%; top: 40%; animation-delay: 4s; }
+.dot:nth-child(6) { left: 85%; top: 55%; animation-delay: 5s; background: #00e5ff; }
+
+@keyframes float {
+  0%, 100% { opacity: 0; transform: translateY(0); }
+  50% { opacity: 0.5; transform: translateY(-40px); }
+}
+
+/* 按钮 */
+#enterBtn {
+  position: relative;
+  z-index: 2;
+  background: transparent;
+  color: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 14px 52px;
+  border-radius: 4px;
+  font-size: 15px;
+  letter-spacing: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 300;
+  transition: all 0.4s ease;
+}
+#enterBtn:hover {
+  color: rgba(255,255,255,0.9);
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.04);
+}
+/* 按钮进入动画 */
+#enterBtn {
+  animation: btnIn 0.8s ease-out both;
+  animation-delay: 0.6s;
+}
+@keyframes btnIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 底部 */
+.landing-footer {
+  position: absolute; bottom: 40px; z-index: 2;
+  font-size: 11px; color: rgba(255,255,255,0.1);
+  letter-spacing: 3px;
+  animation: btnIn 0.8s ease-out both;
+  animation-delay: 0.8s;
+}
+
+/* ======================================== */
+/*  聊天界面                                  */
+/* ======================================== */
+
+#chat-app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  pointer-events: none;
+}
+#chat-app.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* 顶部栏 */
+#header {
+  padding: 14px 24px;
+  background: linear-gradient(180deg, rgba(10,14,30,0.95) 0%, rgba(8,9,15,0.9) 100%);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+#header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, #00e5ff 0%, #6c5ce7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+#header button {
+  background: rgba(255,255,255,0.04);
+  color: #8899aa;
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 7px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  letter-spacing: 1px;
+  transition: all 0.25s;
+  font-family: inherit;
+}
+#header button:hover {
+  background: rgba(0,229,255,0.1);
+  border-color: rgba(0,229,255,0.3);
+  color: #00e5ff;
+  box-shadow: 0 0 12px rgba(0,229,255,0.1);
+}
+
+/* 聊天区 */
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scroll-behavior: smooth;
+}
+#messages::-webkit-scrollbar { width: 4px; }
+#messages::-webkit-scrollbar-track { background: transparent; }
+#messages::-webkit-scrollbar-thumb {
+  background: rgba(0,229,255,0.15);
+  border-radius: 2px;
+}
+
+/* 消息气泡 */
+.msg {
+  max-width: 75%;
+  padding: 14px 18px;
+  border-radius: 12px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 15px;
+  letter-spacing: 0.4px;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: msgIn 0.35s ease-out;
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg .label {
+  font-size: 10px;
+  margin-bottom: 6px;
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+
+.msg.user {
+  align-self: flex-end;
+  background: rgba(0,229,255,0.12);
+  border: 1px solid rgba(0,229,255,0.2);
+  box-shadow: 0 0 20px rgba(0,229,255,0.06), inset 0 0 20px rgba(0,229,255,0.02);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4), 0 0 8px rgba(0,229,255,0.08);
+}
+.msg.user .label { color: #00e5ff; }
+
+.msg.assistant {
+  align-self: flex-start;
+  background: rgba(108,92,231,0.08);
+  border: 1px solid rgba(108,92,231,0.15);
+  box-shadow: 0 0 20px rgba(108,92,231,0.04), inset 0 0 20px rgba(108,92,231,0.01);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4), 0 0 8px rgba(108,92,231,0.06);
+}
+.msg.assistant .label { color: #a29bfe; }
+
+.msg.assistant.streaming::after {
+  content: "▊";
+  color: #00e5ff;
+  animation: blink 0.8s infinite;
+}
 @keyframes blink { 50% { opacity: 0; } }
-#input-area { padding: 16px 20px; background: #1a1a1a; border-top: 1px solid #333; display: flex; gap: 10px; }
-#input-area textarea { flex: 1; background: #222; color: #eee; border: 1px solid #444; border-radius: 8px; padding: 10px 14px; resize: none; font-size: 15px; font-family: inherit; outline: none; }
-#input-area textarea:focus { border-color: #2563eb; }
-#input-area button { background: #2563eb; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 15px; cursor: pointer; }
-#input-area button:hover { background: #1d4ed8; }
-#input-area button:disabled { opacity: 0.5; cursor: default; }
-#empty { color: #666; text-align: center; margin-top: 40vh; font-size: 14px; }
+
+/* 输入区 */
+#input-area {
+  padding: 16px 24px;
+  background: linear-gradient(0deg, rgba(10,14,30,0.95) 0%, rgba(8,9,15,0.85) 100%);
+  border-top: 1px solid rgba(0,229,255,0.12);
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+#input-area textarea {
+  flex: 1;
+  background: rgba(255,255,255,0.03);
+  color: #c8d6e5;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 12px 16px;
+  resize: none;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.3s;
+  caret-color: #00e5ff;
+}
+#input-area textarea:focus {
+  border-color: rgba(0,229,255,0.4);
+  box-shadow: 0 0 16px rgba(0,229,255,0.06), inset 0 0 16px rgba(0,229,255,0.02);
+  background: rgba(255,255,255,0.05);
+}
+#input-area textarea::placeholder {
+  color: rgba(255,255,255,0.2);
+}
+#input-area button {
+  background: linear-gradient(135deg, rgba(0,229,255,0.2) 0%, rgba(108,92,231,0.2) 100%);
+  color: #00e5ff;
+  border: 1px solid rgba(0,229,255,0.3);
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+#input-area button:hover {
+  background: linear-gradient(135deg, rgba(0,229,255,0.3) 0%, rgba(108,92,231,0.3) 100%);
+  box-shadow: 0 0 24px rgba(0,229,255,0.2), 0 0 48px rgba(108,92,231,0.1);
+  border-color: rgba(0,229,255,0.5);
+}
+#input-area button:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+
+#empty {
+  color: rgba(255,255,255,0.15);
+  text-align: center;
+  margin-top: 40vh;
+  font-size: 15px;
+  letter-spacing: 2px;
+}
+
+/* 手机屏适配 */
+@media (max-width: 640px) {
+  .landing-content h1 {
+    font-size: 36px;
+    letter-spacing: 10px;
+  }
+  @keyframes titleInMobile {
+    from { opacity: 0; letter-spacing: 22px; filter: blur(6px); }
+    to   { opacity: 1; letter-spacing: 10px; filter: blur(0); }
+  }
+  .landing-content h1 {
+    animation-name: titleInMobile;
+  }
+  .ring:nth-child(1) { width: 220px; height: 220px; }
+  .ring:nth-child(2) { width: 280px; height: 280px; }
+  .ring:nth-child(3) { width: 180px; height: 180px; }
+  #enterBtn {
+    font-size: 14px;
+    letter-spacing: 4px;
+    padding: 12px 36px;
+  }
+}
 </style>
 </head>
 <body>
 
-<div id="header">
-  <h1>武当修心 <span style="font-size:12px;opacity:0.4;font-weight:normal;">基于 DeepSeek</span></h1>
-  <button onclick="newSession()">新对话</button>
+<!-- ==================== 首页展示 ==================== -->
+<div id="landing">
+  <div class="rings-layer">
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+  </div>
+
+  <div class="particles">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+
+  <div class="landing-content">
+    <h1>武当修心</h1>
+  </div>
+
+  <button id="enterBtn" onclick="enterChat()">开 启 对 话</button>
+
+  <div class="landing-footer">BASED ON DEEPSEEK</div>
 </div>
 
-<div id="messages">
-  <div id="empty">与武当修心聊聊</div>
-</div>
+<!-- ==================== 聊天界面 ==================== -->
+<div id="chat-app">
+  <div id="header">
+    <h1>武当修心</h1>
+    <button onclick="newSession()">新对话</button>
+  </div>
 
-<div id="input-area">
-  <textarea id="input" rows="1" placeholder="输入消息，Enter 发送..." onkeydown="onKeyDown(event)"></textarea>
-  <button id="sendBtn" onclick="send()">发送</button>
+  <div id="messages">
+    <div id="empty">— 与武当修心聊聊 —</div>
+  </div>
+
+  <div id="input-area">
+    <textarea id="input" rows="1" placeholder="输入消息，Enter 发送..." onkeydown="onKeyDown(event)"></textarea>
+    <button id="sendBtn" onclick="send()">发送</button>
+  </div>
 </div>
 
 <script>
-let sessionId = null;
+// ==================== 页面切换 ====================
+function enterChat() {
+  const landing = document.getElementById('landing');
+  const chat = document.getElementById('chat-app');
 
+  // 第一步：首页退出动画
+  landing.classList.add('exit');
+
+  // 第二步：等首页动画跑一段后显示聊天界面
+  setTimeout(() => {
+    chat.classList.add('visible');
+  }, 350);
+
+  // 第三步：等聊天淡入完成后聚焦输入框
+  setTimeout(() => {
+    document.getElementById('input').focus();
+  }, 900);
+}
+
+// ==================== 全局变量 ====================
+let sessionId = null;
 const input = document.getElementById('input');
 const sendBtn = document.getElementById('sendBtn');
 const messagesDiv = document.getElementById('messages');
 
+// ==================== 键盘事件 ====================
 function onKeyDown(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -57,30 +496,34 @@ function onKeyDown(e) {
   }
 }
 
+// ==================== 自动滚底 ====================
 function scrollBottom() {
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
+// ==================== 添加消息 ====================
 function addMsg(role, text) {
   const div = document.createElement('div');
   div.className = `msg ${role}`;
   const label = document.createElement('div');
   label.className = 'label';
   label.textContent = role === 'user' ? '你' : '武当修心';
-  div.appendChild(label);
   const content = document.createElement('div');
   content.textContent = text;
+  div.appendChild(label);
   div.appendChild(content);
   messagesDiv.appendChild(div);
   scrollBottom();
   return content;
 }
 
+// ==================== 移除占位文字 ====================
 function removeEmpty() {
   const el = document.getElementById('empty');
   if (el) el.remove();
 }
 
+// ==================== 发送 ====================
 async function send() {
   const text = input.value.trim();
   if (!text || sendBtn.disabled) return;
@@ -114,7 +557,7 @@ async function send() {
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
-      buffer = lines.pop(); // 保留不完整的行
+      buffer = lines.pop();
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
@@ -138,9 +581,10 @@ async function send() {
   }
 }
 
+// ==================== 新会话 ====================
 function newSession() {
   sessionId = null;
-  messagesDiv.innerHTML = '<div id="empty">与武当修心聊聊</div>';
+  messagesDiv.innerHTML = '<div id="empty">— 与武当修心聊聊 —</div>';
 }
 </script>
 

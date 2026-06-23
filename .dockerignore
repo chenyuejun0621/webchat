@@ -1,0 +1,23 @@
+# 密钥（运行时通过环境变量注入，不打进镜像）
+.env
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# 虚拟环境
+.venv/
+venv/
+
+# Git
+.git/
+.gitignore
+
+# 文档
+*.md
+*.docx
+
+# IDE
+.vscode/
+.idea/
