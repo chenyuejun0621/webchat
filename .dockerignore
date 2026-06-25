@@ -1,6 +1,9 @@
 # 密钥（运行时通过环境变量注入，不打进镜像）
 .env
 
+# 数据文件（通过 volume 挂载，不打进镜像）
+data/
+
 # Python 缓存
 __pycache__/
 *.pyc

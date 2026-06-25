@@ -8,5 +8,7 @@ services:
     # 从 .env 文件读取环境变量（保持密钥安全）
     env_file:
       - .env
-    # 容器退出自动重启
+    # 将数据库文件映射到宿主机，防止容器删除后数据丢失
+    volumes:
+      - ./data:/app/data
     restart: unless-stopped
