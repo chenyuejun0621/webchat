@@ -483,7 +483,7 @@ function enterChat() {
 }
 
 // ==================== 全局变量 ====================
-let sessionId = null;
+let sessionId = localStorage.getItem('current_session_id') || null;
 const input = document.getElementById('input');
 const sendBtn = document.getElementById('sendBtn');
 const messagesDiv = document.getElementById('messages');
@@ -546,6 +546,7 @@ async function send() {
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
     sessionId = resp.headers.get('X-Session-Id');
+localStorage.setItem('current_session_id', sessionId);
 
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
@@ -584,6 +585,7 @@ async function send() {
 // ==================== 新会话 ====================
 function newSession() {
   sessionId = null;
+  localStorage.removeItem('current_session_id');
   messagesDiv.innerHTML = '<div id="empty">— 与武当修心聊聊 —</div>';
 }
 </script>
